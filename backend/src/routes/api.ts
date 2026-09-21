@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { register, login } from '../controllers/authController.js';
-import { getTodos, createTodo } from '../controllers/todoController.js';
+// 1. Tambahkan import updateTodo dan deleteTodo dari controller
+import { getTodos, createTodo, updateTodo, deleteTodo } from '../controllers/todoController.js'; 
 import { validateRegister, validateLogin, validateTodo } from '../middlewares/validator.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
-
+import todoRoutes from './todoRoutes.js';
 const router = Router();
 
 // AUTHENTICATION ROUTES
@@ -14,4 +15,8 @@ router.post('/auth/login', validateLogin, login);
 router.get('/todos', verifyToken, getTodos);
 router.post('/todos', verifyToken, validateTodo, createTodo);
 
+// 2. Tambahkan 2 rute ini yang sebelumnya hilang:
+router.put('/todos/:id', verifyToken, updateTodo);
+router.delete('/todos/:id', verifyToken, deleteTodo);
+router.use('/todos', verifyToken, todoRoutes);
 export default router;
