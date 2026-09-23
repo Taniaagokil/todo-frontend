@@ -5,8 +5,10 @@ import { getTodos, createTodo, updateTodo, deleteTodo } from '../controllers/tod
 import { validateRegister, validateLogin, validateTodo } from '../middlewares/validator.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
 import todoRoutes from './todoRoutes.js';
+import authRoutes from './authRoutes.js';
 const router = Router();
-
+router.use('/auth', authRoutes);
+router.use('/todos', todoRoutes)
 // AUTHENTICATION ROUTES
 router.post('/auth/register', validateRegister, register);
 router.post('/auth/login', validateLogin, login);

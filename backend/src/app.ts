@@ -1,21 +1,45 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import apiRoutes from './routes/api.js';
+import routes from './routes/index.js';
+import { randomUUID } from 'crypto';
+import { sendSuccess, sendError } from './utils/response.js';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ exposedHeaders: ['X-Request-Id'] }));
 app.use(express.json());
-console.log("SERVER BARU SUDAH NYALA!");
-app.get('/', (req, res) => {
-    res.status(200).json({ success: true, message: 'Backend Todo Praktikum Berjalan Mulus!' });
+
+// Request UUID per request & Waktu Request Datang
+app.use((req, res, next) => {
+    const requestId = randomUUID();
+    res.locals.requestId = requestId;
+    res.setHeader('X-Request-Id', requestId);
+    next();
 });
 
-app.use('/api', apiRoutes);
-// 404 Handler dipanggil jika tidak ada route yang cocok
-app.use((req: Request, res: Response) => {
-    res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} tidak ditemukan!` });
+app.use((req, res, next) => {
+    console.log(`[${res.locals.requestId}] ${req.method} ${req.originalUrl}`);
+    next();
+});
 
+// Route utama - test apakah server berjalan
+app.get('/', (req, res) => {
+    sendSuccess(res, 'Backend Todo Praktikum Berjalan Mulus!');
+});
+
+// Daftarkan route dari folder src/routes
+app.use('/api', routes);
+
+// 404 Handler - dipanggil jika route di atas tidak cocok
+app.use((req: Request, res: Response) => {
+    sendError(res, `Route ${req.method} ${req.url} tidak ditemukan!`, 404);
+});
+
+// Global Error Handler - menangkap error yang tidak tertangani
+// Harus ada 4 parameter (err, req, res, next) agar Express mengenalinya sebagai error handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error('Terjadi error:', err.message);
+    sendError(res, 'Terjadi kesalahan pada server.', 500);
 });
 
 export default app;
